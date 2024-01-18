@@ -1,0 +1,170 @@
+---
+title: "Random Forest Model on CarSpecs Dataset"
+format:
+  html: default
+embed-resources: true
+editor: visual
+theme: 
+  dark: darkly
+  light: flatly
+fontsize: 18px
+code-overflow: wrap
+code-block-bg: true
+code-block-border-left: true
+---
+
+```{=html}
+<style>
+body {
+zoom: 110%
+}
+
+.title, .subtitle {
+  text-align: center;
+}
+
+.code-output {
+  text-align: center;
+}
+
+.code-indent {
+  padding-left: 30px;
+  border-left: 3px solid #ccc;
+}
+
+.scroll {
+max-height: 500px;
+overflow-y: scroll;
+}
+
+</style>
+```
+```{r}
+#| code-fold: true
+
+set.seed(123)
+
+#remove stored variables and data in environment
+rm(list=ls())
+
+#load in libraries 
+suppressPackageStartupMessages({
+library(dplyr)
+library(glue)
+library(knitr)
+library(broom)
+library(stargazer)
+})
+```
+
+```{r}
+load("CarSpecs.RData")
+
+#standard linear regression model
+
+# model1 <- lm(formula = msrp_2019 ~ epa_class + drive_train + passenger_capacity + doors + wheelbase + height + fuel_tank_cap + city_mpg + hwy_mpg + net_torque + fuel_system + engine_type + net_hp + transmit_descr + brake_type + steer_type, data = carspecs)
+
+# summary(model1)
+# plot(model1)
+```
+
+```{r}
+#import randomForest package
+suppressPackageStartupMessages(library(randomForest))
+if (!require(randomForest)) install.packages("randomForest")
+library(randomForest)
+```
+
+```{r}
+#| class-output: "code-indent"
+
+#same formula as the one used for a linear regression model
+reg_formula <- msrp_2019 ~ epa_class + drive_train + passenger_capacity + doors + wheelbase + height + fuel_tank_cap + city_mpg + hwy_mpg + net_torque + fuel_system + engine_type + net_hp + transmit_descr + brake_type + steer_type
+
+
+# Grow the random tree and set the number of predictors to consider at each split of the tree (numpred)
+
+numpred <- 5
+randomForest_Model <- randomForest(formula = reg_formula, data = carspecs, mtry = numpred, importance = TRUE)
+
+#Summary of the random forest model
+randomForest_Model
+
+```
+
+As seen from the summary above, the random forest model created 500 trees with 5 variables at every split.
+
+```{r}
+#| class-output: "code-indent"
+#| fig-align: center
+
+kable(importance(randomForest_Model), caption = "Importance of each variable in the random forest model")
+varImpPlot(randomForest_Model, main = "Variable Importance")
+```
+
+`%IncMSE` is the amount that the MSE of predictions increases if the variable is randomly chosen instead of using its actual value which is how important it is for prediction. `IncNodePurity` measures how much splitting on it improves the "purity" (the similarity of the data points in each leaf). In both metrics, higher values mean it's more important.
+
+From the graph above, predictors like engine_type, height, fuel_tank_cap, net_hp, and wheelbase seem to be the most important. On the other hand, predictors like doors, steer_type, and fuel_system don't seem to as important in the regression models.
+
+```{r}
+#| class-output: "code-indent"
+
+preds2 <- predict(randomForest_Model)
+
+SSE2 <- sum((preds2 - carspecs$msrp_2019)^2)
+SST2 <- sum((carspecs$msrp_2019 - mean(carspecs$msrp_2019))^2)
+
+R_sq2 <- 1 - SSE2/SST2
+
+glue("Random forest trees with all data as training:-
+     
+      SSE: {round(SSE2, digits = 3)}
+      SST: {round(SST2, digits = 3)}
+      R-squared: {round(R_sq2, digits = 3)}")
+```
+
+```{r}
+#| fig-aling: center
+
+plot(preds2, carspecs$msrp_2019, main = "Plot of actual vs. predicted MSRP values", xlab = "Predicted values", ylab = "Actual MSRP Values")  
+abline(0,1, col = "red")
+```
+
+The model has an R squared value of 98.5% which seems to be extremely high. This might be due to overfitting to the data since the predictions are on the same data set that the model was trained on.
+
+I can try to split the data into training and testing sets to better evaluate the regression models.
+
+```{r}
+# Split the data into training and testing sets
+indices <- sample(nrow(carspecs))
+n_train <- round(0.7 * nrow(carspecs))
+
+training_data <- carspecs[indices[1:n_train], ]
+testing_data <- carspecs[indices[(n_train + 1):nrow(carspecs)], ]
+```
+
+```{r}
+#| class-output: "code-indent"
+
+ranFor_cv <- randomForest(reg_formula, data = training_data, importance = TRUE)
+preds3 <- predict(ranFor_cv, testing_data)
+
+SSE3 <- sum((preds3 - testing_data$msrp_2019)^2)
+SST3 <- sum((testing_data$msrp_2019 - mean(testing_data$msrp_2019))^2)
+
+R_sq3 <- 1 - SSE3/SST3
+
+glue("Random forest trees with 70% of data as training and 30% as testing:-
+     
+      SSE: {round(SSE3, digits = 3)}
+      SST: {round(SST3, digits = 3)}
+      R-squared: {round(R_sq3, digits = 3)}")
+```
+
+```{r}
+plot(preds3, carspecs$msrp_2019[indices[(n_train + 1):nrow(carspecs)]], main = "Plot of actual vs. predicted MSRP values on testing set", xlab = "Predicted values", ylab = "Actual MSRP Values")  
+abline(0,1, col = "red")
+
+```
+
+The model had an R squared value of 97.3% on the testing data set which is still high and might indicate that the results are best understood with a combination of other types of models and further analysis.

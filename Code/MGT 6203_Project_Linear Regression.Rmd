@@ -1,0 +1,95 @@
+---
+title: "Untitled"
+author: "SJ"
+date: "2023-11-18"
+output: html_document
+---
+
+```{r}
+load("Team-18/Data/carspecs.RData")
+cardata1_model <- carspecs
+head(cardata1_model)
+```
+```{r}
+n = dim(cardata1_model)[1]
+n1= round(n/10)
+flag = sort(sample(1:n,n1))
+
+cartest = cardata1_model[flag,]
+cartrain = cardata1_model[-flag,]
+dim(cardata1_model)
+dim(cartest)
+dim(cartrain)
+
+
+```
+
+
+
+
+```{r}
+model_LR <- lm(formula = msrp_2019 ~ epa_class + drive_train + passenger_capacity + 
+                 doors + wheelbase + height + fuel_tank_cap + city_mpg + hwy_mpg + 
+                 net_torque + fuel_system + engine_type + net_hp + transmit_descr + 
+                 brake_type + steer_type,  data=cartrain)
+summary(model_LR)
+  
+```
+```{r}
+#colnames(cardata1_model)
+
+predtrain <- predict(model_LR,cartrain)
+trainerror <- mean((cartrain$msrp_2019-predtrain)^2)
+trainerror
+
+
+predtest <- predict(model_LR,cartest)
+testerror <- mean((cartest$msrp_2019-predtest)^2)
+testerror
+
+```
+```{r}
+
+n = dim(cardata1_model)[1]
+n1= round(n/10)
+set.seed(7406) ### set the seed for randomization
+
+B= 100 ### number of loops
+TEALL = NULL ### Final TE values
+TRALL = NULL
+for (b in 1:B){
+
+  flag <- sort(sample(1:n, n1));
+  cartest = cardata1_model[flag,]
+  cartrain = cardata1_model[-flag,]
+  
+ model_LR <- lm(formula = msrp_2019 ~ epa_class + drive_train + passenger_capacity + 
+                 doors + wheelbase + height + fuel_tank_cap + city_mpg + hwy_mpg + 
+                 net_torque + fuel_system + engine_type + net_hp + transmit_descr + 
+                 brake_type + steer_type,  data=cartrain)
+  predtrain <- predict(model_LR,cartrain)
+  trainerror <- mean((cartrain$msrp_2019-predtrain)^2)
+  trainerror
+
+
+  predtest <- predict(model_LR,cartest)
+  testerror <- mean((cartest$msrp_2019-predtest)^2)
+  testerror
+  
+  TRALL = rbind(TEALL,trainerror)
+  TEALL = rbind(TEALL,testerror)
+
+}
+dim(TEALL)
+colnames(TRALL) <- c("Training Error Mean and Variance")
+apply(TRALL, 2, mean)
+apply(TRALL, 2, var)
+  
+colnames(TEALL) <- c("Testing Error Mean and Variance")
+apply(TEALL, 2, mean)
+apply(TEALL, 2, var)
+
+
+  
+```
+

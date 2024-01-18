@@ -1,0 +1,198 @@
+---
+title: "Untitled"
+author: "SJ"
+date: "2023-11-01"
+output: html_document
+---
+
+```{r}
+#install.packages("readr")
+#library(readr)
+library(ggplot2)
+library(GGally)
+#install.packages("GGally")
+url <- "https://github.gatech.edu/raw/MGT-6203-Fall-2023-Canvas/Team-18/main/Data/CarSpecs.csv?token=GHSAT0AAAAAAAAC26TN5RFNYUES5XH5SGNMZKFK6TQ"
+cardataspec<-read.csv(url)
+cardata <- cardataspec 
+head(cardata)
+```
+
+
+```{r}
+dim(cardata)
+str(cardata)
+
+```
+```{r}
+# Finding the Column names/Variable names
+names(cardata)
+```
+```{r}
+# Finding Numerical Variable
+numeric_cardata_col <- colnames(cardata[,sapply(cardata,is.numeric)])
+numeric_cardata_col
+```
+```{r}
+cardata_num <- cardata[,c('MSRP','Car.Year','X2019MSRP','Passenger.Capacity','Passenger.Doors','Transmittion.Speed','Base.Curb.Weight','Wheelbase','Height.Overall','Fuel.Tank.Capacity','Combined.Estimate.MPG','City.MPG','Hwy.MPG','SAE.Net.Torque','SAE.Net.Horsepower')]
+
+```
+
+```{r}
+# Correlation Matrix of Numerical Variable
+library(corrplot)
+c1_6 = round(cor(cardata_num[1:6]),2)
+corrplot(c1_6,method ="number")
+
+
+c7_11 = round(cor(cardata_num[,c(1,7:11)]),2)
+corrplot(c7_11,method ="number")
+
+c12_15 = round(cor(cardata_num[,c(1,12:15)]),2)
+corrplot(c12_15,method ="number")
+
+ggcorr(cardata_num)
+
+
+```
+```{r}
+unique(cardata$Car.Year)
+unique(cardata$Car.Make)
+#unique(cardata$Car.Model)
+#unique(cardata$EPA.Class)
+#unique(cardata$Style.Name)
+#unique(cardata$Drive.Train)
+#unique(cardata$Body.Style)
+
+```
+
+
+
+```{r}
+# Car.Make Vs MSRP & Car.Model Vs MSRP
+
+library(tidyverse)
+
+cardata %>%
+  ggplot() +
+    aes(y = MSRP, x = Car.Make, group = "") +
+    geom_point() + 
+    geom_line()+theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8))
+
+cardata %>%
+  ggplot() +
+    aes(y = Car.Model, x = Car.Make, group = "") +
+    geom_point() + 
+    geom_line()+theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8))
+```
+
+
+```{r}
+unique(cardata$Car.Model)
+```
+```{r}
+# From the graph, it shows that Car.Make == "Lamborghini" has the highest MRSP
+highest_MRSP <- cardata[which.max(cardata$MSRP),]
+highest_MRSP
+highest_MRSP_car <- cardata[cardata$Car.Make == "Lamborghini",]
+highest_MRSP_car %>%
+  ggplot() +
+    aes(y = MSRP, x = Car.Model, group = "") +
+    geom_point() + 
+    geom_line()+theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8))
+
+```
+```{r}
+
+Lowest_MRSP <- cardata[which.min(cardata$MSRP),]
+Lowest_MRSP
+# From the above R code, it shows that Car.Make == "Nissan" has the lowest MRSP
+Lowest_MRSP_car <- cardata[cardata$Car.Make == "Nissan",]
+Lowest_MRSP_car %>%
+  ggplot() +
+    aes(y = MSRP, x = Car.Model, group = "") +
+    geom_point() + 
+    geom_line()+theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8))
+
+```
+```{r}
+# Finding the median of MRSP
+med <- median(cardata$MSRP)
+Median_car <- cardata[cardata$MSRP == 37710,]
+Median_car
+Median_car1 <- cardata[cardata$Car.Make == "Honda",]
+
+Median_car1 %>%
+  ggplot() +
+    aes(y = MSRP, x = Car.Model, group = "") +
+    geom_point() + 
+    geom_line()+theme(axis.text.x  = element_text(angle=90, vjust=0.5, size=8))
+
+```
+```{r}
+plot(cardata_num)
+
+```
+```{r}
+par(mfrow=c(2,3))
+plot(cardata_num$Car.Year, cardata_num$MSRP, main="Car.Year Vs MSRP", xlab="Car.Year", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$X2019MSRP, cardata_num$MSRP, main="X2019MSRP Vs MSRP", xlab="X2019MSRP", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$Passenger.Capacity, cardata_num$MSRP, main="Passenger.Capacity Vs MSRP", xlab="Passenger.Capacity", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$Passenger.Doors, cardata_num$MSRP, main="Passenger.Doors Vs MSRP", xlab="Passenger.Doors", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$Transmittion.Speed, cardata_num$MSRP, main="Transmittion.Speed Vs MSRP", xlab="Transmittion.Speed", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$Base.Curb.Weight, cardata_num$MSRP, main="Base.Curb.Weight Vs MSRP", xlab="Base.Curb.Weight", ylab="MSRP", col="red", cex=2)
+
+
+
+```
+
+```{r}
+par(mfrow=c(3,3))
+plot(cardata_num$Wheelbase, cardata_num$MSRP, main="Wheelbase Vs MSRP", xlab="Wheelbase", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$Height.Overall, cardata_num$MSRP, main="Height.Overall Vs MSRP", xlab="Height.Overall", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$Fuel.Tank.Capacity, cardata_num$MSRP, main="Fuel.Tank.Capacity Vs MSRP", xlab="Fuel.Tank.Capacity", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$Combined.Estimate.MPG, cardata_num$MSRP, main="Combined.Estimate.MPG Vs MSRP", xlab="Combined.Estimate.MPG", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$City.MPG, cardata_num$MSRP, main="City.MPG Vs MSRP", xlab="City.MPG", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$Hwy.MPG, cardata_num$MSRP, main="Hwy.MPG Vs MSRP", xlab="Hwy.MPG", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$SAE.Net.Torque, cardata_num$MSRP, main="SAE.Net.Torque Vs MSRP", xlab="SAE.Net.Torque", ylab="MSRP", col="red", cex=2)
+plot(cardata_num$SAE.Net.Horsepower, cardata_num$MSRP, main="SAE.Net.Horsepower Vs MSRP", xlab="SAE.Net.Horsepower", ylab="MSRP", col="red", cex=2)
+
+
+```
+```{r}
+
+boxplot(cardata$MSRP~as.factor(cardata$EPA.Class),main="EPA.Class Vs MSRP",xlab="EPA.Class",ylab="MSRP",col="yellow",border="red")
+boxplot(cardata$MSRP~as.factor(cardata$Drive.Train),main="Drive.Train Vs MSRP",xlab="Drive.Train",ylab="MSRP",col="yellow",border="red")
+boxplot(cardata$MSRP~as.factor(cardata$Body.Style),main="Body.Style Vs MSRP",xlab="Body.Style",ylab="MSRP",col="yellow",border="red")
+boxplot(cardata$MSRP~as.factor(cardata$Fuel.System),main="Fuel.System Vs MSRP",xlab="Fuel.System",ylab="MSRP",col="yellow",border="red")
+
+
+```
+```{r}
+boxplot(cardata$MSRP~as.factor(cardata$Engine.Type),main="Engine.Type Vs MSRP",xlab="Engine.Type",ylab="MSRP",col="orange",border="brown")
+boxplot(cardata$MSRP~as.factor(cardata$Transmittion.Description),main="Transmittion.Description Vs MSRP",xlab="Transmittion.Description",ylab="MSRP",col="orange",border="brown")
+boxplot(cardata$MSRP~as.factor(cardata$Brake.Type),main="Brake.Type Vs MSRP",xlab="Brake.Type",ylab="MSRP",col="orange",border="brown")
+boxplot(cardata$MSRP~as.factor(cardata$Steering.Type),main="Steering.Type Vs MSRP",xlab="Steering.Type",ylab="MSRP",col="orange",border="brown")
+```
+```{r}
+boxplot(cardata$MSRP~as.factor(cardata$Front.Tire.Material),main="Front.Tire.Material Vs MSRP",xlab="Front.Tire.Material",ylab="MSRP",col="yellow",border="blue")
+boxplot(cardata$MSRP~as.factor(cardata$Back.Tire.Material),main="Back.Tire.Material Vs MSRP",xlab="Back.Tire.Material",ylab="MSRP",col="yellow",border="black")
+boxplot(cardata$MSRP~as.factor(cardata$Suspension.Type.Front),main="Suspension.Type.Front Vs MSRP",xlab="Suspension.Type.Front",ylab="MSRP",col="yellow",border="blue")
+boxplot(cardata$MSRP~as.factor(cardata$Suspension.Type.Rear),main="Suspension.Type.Rear Vs MSRP",xlab="Suspension.Type.Rear",ylab="MSRP",col="yellow",border="black")
+```
+```{r}
+boxplot(cardata$MSRP~as.factor(cardata$Brakes.ABS),main="Brakes.ABS Vs MSRP",xlab="Brakes.ABS",ylab="MSRP",col="orange",border="brown")
+boxplot(cardata$MSRP~cardata$Child.Safety.Rear.Door.Locks,main="Child.Safety.Rear.Door.Locks Vs MSRP",xlab="Child.Safety.Rear.Door.Locks",ylab="MSRP",col="orange",border="brown")
+boxplot(cardata$MSRP~as.factor(cardata$Daytime.Running.Lights),main="Daytime.Running.Lights Vs MSRP",xlab="Daytime.Running.Lights",ylab="MSRP",col="orange",border="brown")
+boxplot(cardata$MSRP~as.factor(cardata$Traction.Control),main="Traction.Control Vs MSRP",xlab="Traction.Control",ylab="MSRP",col="orange",border="brown")
+boxplot(cardata$MSRP~as.factor(cardata$Night.Vision),main="Night.Vision Vs MSRP",xlab="Night.Vision",ylab="MSRP",col="orange",border="brown")
+boxplot(cardata$MSRP~as.factor(cardata$Rollover.Protection.Bars),main="Rollover.Protection.Bars Vs MSRP",xlab="Rollover.Protection.Bars",ylab="MSRP",col="orange",border="brown")
+
+```
+```{r}
+boxplot(cardata$MSRP~as.factor(cardata$Fog.Lamps),main="Fog.Lamps Vs MSRP",xlab="Fog.Lamps",ylab="MSRP",col="gold",border="black")
+boxplot(cardata$MSRP~as.factor(cardata$Parking.Aid),main="Parking.Aid Vs MSRP",xlab="Parking.Aid",ylab="MSRP",col="gold",border="black")
+boxplot(cardata$MSRP~as.factor(cardata$Tire.Pressure.Monitor),main="Tire.Pressure.Monitor Vs MSRP",xlab="Tire.Pressure.Monitor",ylab="MSRP",col="gold",border="black")
+boxplot(cardata$MSRP~as.factor(cardata$BackUp.Camera),main="BackUp.Camera Vs MSRP",xlab="BackUp.Camera",ylab="MSRP",col="gold",border="black")
+boxplot(cardata$MSRP~as.factor(cardata$Stability.Control),main="Stability.Control Vs MSRP",xlab="Stability.Control",ylab="MSRP",col="gold",border="black")
+```
+

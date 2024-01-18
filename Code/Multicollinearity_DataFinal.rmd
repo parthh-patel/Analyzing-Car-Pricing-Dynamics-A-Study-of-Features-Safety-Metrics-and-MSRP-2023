@@ -1,0 +1,144 @@
+---
+title: "Multicollinearity and VIF Analysis for car_data_final"
+format: html
+html: default
+embed-resources: true
+editor: visual
+theme: 
+  light: flatly
+fontsize: 18px
+code-overflow: wrap
+code-block-bg: true
+code-block-border-left: true
+---
+
+
+```{r}
+rm(list=ls())
+
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(car)
+  library(corrplot)
+  library(heatmaply)
+  library(plotly)
+  library(ggcorrplot)
+})
+
+load("car_data_final.RData")
+```
+
+```{r}
+NA_counts <- colSums(is.na(car_data_final))
+
+variables_with_NAs <- names(NA_counts[NA_counts > 0])
+variables_with_NAs
+
+sum(NA_counts)
+na_rows <- which(is.na(car_data_final$make))
+
+NA_rows_make <- subset(car_data_final, is.na(make))
+NA_rows_fuelTank <- subset(car_data_final, is.na(fuel_tank_capacity_approx_gal))
+```
+
+```{r}
+split_names <- strsplit(NA_rows_make$make_model, " ")
+NA_rows_make$make <- sapply(split_names, '[', 1)
+NA_rows_make$model <- sapply(split_names, function(x) paste(x[-1], collapse = " "))
+
+car_data_final$make[na_rows] <- NA_rows_make$make
+car_data_final$model[na_rows] <- NA_rows_make$model
+
+car_data_final$fuel_tank_capacity_approx_gal[1595] <- 19.0
+car_data_final$fuel_tank_capacity_approx_gal[1596] <- 19.0
+car_data_final$fuel_tank_capacity_approx_gal[1597] <- 19.0
+car_data_final$fuel_tank_capacity_approx_gal[1598] <- 19.0
+car_data_final$fuel_tank_capacity_approx_gal[6566] <- 23.8
+```
+
+```{r}
+factors_vars <- c("parking_aid", 
+                  "tire_pressure_monitor",
+                  "backup_camera",
+                  "drivetrain")
+                  
+remove_vars <- c("make_model",
+                 "make",
+                 "model",
+                 #"msrp",
+                 "engine",
+                 #"epa_class",
+                 "transmission",
+                 "displacement",
+                 "front_tire_size",
+                 "rear_tire_size",
+                 "year")
+
+correlation_data <- car_data_final %>%
+  mutate(across(all_of(factors_vars), as.factor)) %>%
+  select(-all_of(remove_vars))
+```
+
+```{r}
+dummy_vars <- model.matrix(~1+., data = correlation_data)
+
+model <- lm(msrp ~ ., data = correlation_data)
+```
+
+```{r}
+#Making a correlation matrix
+cor_matrix <- cor(dummy_vars)
+var_names <- colnames(dummy_vars)
+
+#corrplot(cor_matrix, method = "color", type = "upper")
+
+#VIF values
+vif_results <- vif(model)
+print(vif_results)
+
+```
+
+```{r}
+#from https://towardsdatascience.com/
+
+corr_simple <- function(data=df,sig=0.5){
+  #convert data to numeric in order to run correlations
+  #convert to factor first to keep the integrity of the data - each value will become a number rather than turn into NA
+  df_cor <- data %>% mutate_if(is.character, as.factor)
+  df_cor <- df_cor %>% mutate_if(is.factor, as.numeric)
+  #run a correlation and drop the insignificant ones
+  corr <- cor(df_cor)
+  #prepare to drop duplicates and correlations of 1     
+  corr[lower.tri(corr,diag=TRUE)] <- NA 
+  #drop perfect correlations
+  corr[corr == 1] <- NA 
+  #turn into a 3-column table
+  corr <- as.data.frame(as.table(corr))
+  #remove the NA values from above 
+  corr <- na.omit(corr) 
+  #select significant values  
+  corr <- subset(corr, abs(Freq) > sig) 
+  #sort by highest correlation
+  corr <- corr[order(-abs(corr$Freq)),] 
+  #print table
+  print(corr)
+  #turn corr back into matrix in order to plot with corrplot
+  mtx_corr <- reshape2::acast(corr, Var1~Var2, value.var="Freq")
+  
+  #plot correlations visually
+  corrplot(mtx_corr, is.corr=FALSE, tl.col="black", na.label=" ")
+}
+
+corr_simple(correlation_data)
+
+```
+
+```{r}
+corr_plot <- ggcorrplot(cor_matrix)
+corr_plot
+
+corr_plotly <- ggplotly(corr_plot)
+corr_plotly
+
+```
