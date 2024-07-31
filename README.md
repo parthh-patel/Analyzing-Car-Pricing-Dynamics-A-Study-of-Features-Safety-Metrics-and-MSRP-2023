@@ -1,12 +1,22 @@
+# Analyzing Car Pricing Dynamics: A Study of Features, Safety Metrics, and MSRP
+
+**This project analyzed over 30,000 vehicle records to identify factors influencing MSRP using R and Python. By refining regression models and employing dimension reduction techniques, we were able to create models explaining 98.4% of the variance. We also compared various machine learning models, including Random Forest and XGBoost, through hyperparameter tuning and cross-validation to optimize accuracy.**
+
+<div align="center">
+  
+| [Final Report](https://github.com/parthh-patel/Analyzing-Car-Pricing-Dynamics-A-Study-of-Features-Safety-Metrics-and-MSRP-2023/blob/main/Group%2018%20Final%20Project%20Submission.pdf) | [Project Code Folder](https://github.com/parthh-patel/Analyzing-Car-Pricing-Dynamics-A-Study-of-Features-Safety-Metrics-and-MSRP-2023/tree/main/Code) |
+|---|---|
+
+</div>
+
+___
+
+
 # Team-18
  Team 18's group project GitHub repository for MGT 6203 (Data Analytics for Business) Fall 2023 semester.
 
  ## Group Members: 
- - Parth Patel
- - Evan Boyle
- - Changui Han
- - Shekinah Jacob
- - Austin Pesina 
+ Parth Patel, Evan Boyle, Changui Han, Shekinah Jacob, & Austin Pesina 
 
  ## Code:
  R/R Markdown code files of the group's progress.
